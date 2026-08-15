@@ -35,7 +35,7 @@ import libimobiledevice
 // Helper para convertir un `plist_t` de C a un diccionario de Swift [String: Any].
 // Esta función es necesaria porque libimobiledevice devuelve los datos en su propio formato de Plist.
 private func convertPlistToDictionary(_ plist: plist_t) -> [String: Any]? {
-    var dict = String: Any
+    var dict: [String: Any] = [:]
     var iterator: plist_dict_iter?
     plist_dict_new_iter(plist, &iterator)
 
@@ -151,11 +151,10 @@ class RealDevice: Device {
         guard lockdownd_start_service(lockdown, serviceName, &service) == LOCKDOWN_E_SUCCESS, let serviceDesc = service else {
             throw DeviceCommunicationError.serviceConnectionFailed(serviceName: serviceName)
         }
-        let port = serviceDesc.pointee.port
-        lockdownd_service_descriptor_free(service)
+        defer { lockdownd_service_descriptor_free(serviceDesc) }
 
         // 4. Crear un cliente para el servicio `mobile_image_mounter`.
-        guard mobile_image_mounter_new(device, port, &mim) == MOBILE_IMAGE_MOUNTER_E_SUCCESS else {
+        guard mobile_image_mounter_new(device, serviceDesc, &mim) == MOBILE_IMAGE_MOUNTER_E_SUCCESS else {
             throw DeviceCommunicationError.serviceConnectionFailed(serviceName: serviceName)
         }
         defer { mobile_image_mounter_free(mim) }
@@ -199,11 +198,10 @@ class RealDevice: Device {
         guard lockdownd_start_service(lockdown, serviceName, &service) == LOCKDOWN_E_SUCCESS, let serviceDesc = service else {
             throw DeviceCommunicationError.serviceConnectionFailed(serviceName: serviceName)
         }
-        let port = serviceDesc.pointee.port
-        lockdownd_service_descriptor_free(service)
+        defer { lockdownd_service_descriptor_free(serviceDesc) }
 
         // 4. Crear un cliente para el servicio `mobile_image_mounter`.
-        guard mobile_image_mounter_new(device, port, &mim) == MOBILE_IMAGE_MOUNTER_E_SUCCESS else {
+        guard mobile_image_mounter_new(device, serviceDesc, &mim) == MOBILE_IMAGE_MOUNTER_E_SUCCESS else {
             throw DeviceCommunicationError.serviceConnectionFailed(serviceName: serviceName)
         }
         defer { mobile_image_mounter_free(mim) }
