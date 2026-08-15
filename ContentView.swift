@@ -11,7 +11,6 @@ struct ContentView: View {
     @StateObject private var ddiManager = DDIManager()
     @State private var isPairingValid: Bool = false
     @State private var showFileImporter: Bool = false
-    @State private var detectedUDID: String = ""
 
     var body: some View {
         VStack(spacing: 16) {
@@ -92,7 +91,7 @@ struct ContentView: View {
 
                 Button(action: {
                     Task {
-                        await ddiManager.mountDDI(udid: detectedUDID)
+                        await ddiManager.mountDDI()
                     }
                 }) {
                     Label("Montar DDI", systemImage: "play.fill")
@@ -103,13 +102,21 @@ struct ContentView: View {
                 .tint(.green)
                 .disabled(!isPairingValid)
             }
+        .padding(.horizontal)
+        
+        // Barra de Progreso (visible solo durante el montaje)
+        if ddiManager.isMounting {
+            ProgressView("Montando DDI...", value: ddiManager.mountProgress, total: 1.0)
+                .padding(.horizontal)
+        }
+
             .padding(.horizontal)
 
             Button(action: {
                 Task {
-                    self.detectedUDID = await ddiManager.detectDevice()
-                    await loadExistingPairing(for: self.detectedUDID)
-                    _ = await ddiManager.checkDDIMounted(udid: self.detectedUDID)
+                    await ddiManager.detectDevice()
+                    await loadExistingPairing()
+                    _ = await ddiManager.checkDDIMounted()
                 }
             }) {
                 Label("Verificar Dispositivo", systemImage: "arrow.clockwise")
@@ -176,9 +183,9 @@ struct ContentView: View {
         .onAppear {
             // Al iniciar la app, verificamos automáticamente el dispositivo y su pairing.
             Task {
-                self.detectedUDID = await ddiManager.detectDevice()
-                await loadExistingPairing(for: self.detectedUDID)
-                _ = await ddiManager.checkDDIMounted(udid: self.detectedUDID)
+                await ddiManager.detectDevice()
+                await loadExistingPairing()
+                _ = await ddiManager.checkDDIMounted()
             }
         }
     }
@@ -192,13 +199,14 @@ struct ContentView: View {
         }
     }
 
-    private func loadExistingPairing(for udid: String) async {
-        // Si ya tenemos un pairing válido, no hacemos nada para evitar que se borre la información.
-        if isPairingValid {
-            ddiManager.log("Ya existe un pairing válido. Omitiendo búsqueda.", type: .info)
+    private func loadExistingPairing() async {
+        guard let udid = ddiManager.detectedDevice?.udid, !udid.isEmpty else {
+            ddiManager.log("No se ha detectado un UDID para buscar el pairing.", type: .warning)
+            self.isPairingValid = false
             return
         }
 
+        self.isPairingValid = false // Reseteamos el estado antes de buscar
         ddiManager.log("Buscando pairing existente para UDID: \(udid)...", type: .info)
         do {
             // Intentamos cargar el pairing y procesarlo para validar su contenido

@@ -1,0 +1,4 @@
+module libimobiledevice {
+    header "MendezDDI-Bridging-Header.h"
+    link "imobiledevice-1.0"
+}
