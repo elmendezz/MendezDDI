@@ -5,7 +5,6 @@
 // v1.0.0 - Gestor principal para conexiones Lockdown, detección de Developer Mode y verificación de DDI.
 
 import Foundation
-import UIKit
 
 enum DDIStatus {
     case notMounted
