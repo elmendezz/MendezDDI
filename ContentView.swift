@@ -110,8 +110,6 @@ struct ContentView: View {
                 .padding(.horizontal)
         }
 
-            .padding(.horizontal)
-
             Button(action: {
                 Task {
                     await ddiManager.detectDevice()
