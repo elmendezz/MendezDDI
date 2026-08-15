@@ -1,0 +1,120 @@
+# .github/workflows/build.yml
+# MendezDDI - Version: 1.1.0
+# Changelog:
+# v1.1.0 - Workflow completo para compilación, caché de DerivedData/SPM, empaquetado en IPA y publicación de Release con fecha/hora/segundo.
+# v1.0.0 - Archivos base de la aplicación Swift/SwiftUI.
+
+name: Build and Release MendezDDI
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
+jobs:
+  build-and-release:
+    runs-on: macos-14
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout del código
+        uses: actions/checkout@v4
+
+      - name: Seleccionar versión de Xcode
+        run: |
+          sudo xcode-select -s /Applications/Xcode_15.4.app/Contents/Developer
+          xcodebuild -version
+
+      - name: Caché de DerivedData y Swift Package Manager
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/Library/Caches/org.swift.swiftpm
+            ~/Library/Developer/Xcode/DerivedData
+          key: ${{ runner.os }}-xcode-${{ hashFiles('MendezDDI/**/*.swift', 'MendezDDI/**/*.xcodeproj', 'MendezDDI/**/Package.resolved') }}
+          restore-keys: |
+            ${{ runner.os }}-xcode-
+
+      - name: Compilar aplicación (MendezDDI)
+        run: |
+          cd MendezDDI
+          
+          # Si usas proyecto Xcode tradicional (.xcodeproj):
+          if [ -d "MendezDDI.xcodeproj" ]; then
+            xcodebuild clean build \
+              -project MendezDDI.xcodeproj \
+              -scheme MendezDDI \
+              -sdk iphoneos \
+              -configuration Release \
+              CODE_SIGN_IDENTITY="" \
+              CODE_SIGNING_REQUIRED=NO \
+              CODE_SIGNING_ALLOWED=NO \
+              CONFIGURATION_BUILD_DIR=build/Release-iphoneos
+          else
+            # Si se compila directamente mediante archivos Swift / SPM:
+            mkdir -p build/Release-iphoneos/Payload
+            echo "Compilando directamente archivos Swift..."
+            swiftc -sdk $(xcrun --sdk iphoneos --show-sdk-path) \
+                   -target arm64-apple-ios15.0 \
+                   -emit-executable \
+                   -o build/Release-iphoneos/MendezDDI \
+                   *.swift
+          fi
+
+      - name: Empaquetar en MendezDDI.ipa
+        run: |
+          mkdir -p Payload
+          
+          # Verificar si se generó un .app o un binario suelto
+          if [ -d "MendezDDI/build/Release-iphoneos/MendezDDI.app" ]; then
+            cp -r MendezDDI/build/Release-iphoneos/MendezDDI.app Payload/
+          else
+            mkdir -p Payload/MendezDDI.app
+            cp MendezDDI/build/Release-iphoneos/MendezDDI Payload/MendezDDI.app/
+            
+            # Crear Info.plist básico si fue compilación directa
+            cat << 'PLIST' > Payload/MendezDDI.app/Info.plist
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleExecutable</key>
+    <string>MendezDDI</string>
+    <key>CFBundleIdentifier</key>
+    <string>com.mendez.ddi</string>
+    <key>CFBundleName</key>
+    <string>MendezDDI</string>
+    <key>CFBundleShortVersionString</key>
+    <string>1.0</string>
+    <key>CFBundleVersion</key>
+    <string>1</string>
+    <key>LSRequiresIPhoneOS</key>
+    <true/>
+    <key>UIDeviceFamily</key>
+    <array>
+        <integer>1</integer>
+        <integer>2</integer>
+    </array>
+</dict>
+</plist>
+PLIST
+          fi
+
+          zip -r MendezDDI.ipa Payload
+          echo "TIMESTAMP=$(date +'%Y%m%d-%H%M%S')" >> $GITHUB_ENV
+
+      - name: Crear Release en GitHub
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: MendezDDI-${{ env.TIMESTAMP }}
+          name: Release MendezDDI-${{ env.TIMESTAMP }}
+          body: |
+            Compilación automática de **MendezDDI**.
+            - **Fecha/Hora:** ${{ env.TIMESTAMP }}
+            - **Archivo:** `MendezDDI.ipa`
+          files: MendezDDI.ipa
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
