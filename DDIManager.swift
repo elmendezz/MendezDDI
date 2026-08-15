@@ -37,6 +37,8 @@ struct LogEntry: Identifiable, Hashable {
 }
 
 final class DDIManager: ObservableObject {
+    private let deviceCommunicator = DeviceCommunicator()
+
     @Published var isDeveloperModeEnabled: Bool = false
     @Published var ddiStatus: DDIStatus = .unknown
     @Published var deviceInfo: String = "No detectado"
@@ -51,43 +53,62 @@ final class DDIManager: ObservableObject {
 
     /// Detecta el dispositivo vía Lockdown (Simulación de handshaking preliminar)
     func detectDevice() async -> String {
-        log("Conectando con Lockdown service...", type: .info)
-        try? await Task.sleep(nanoseconds: 1_000_000_000)
-        
-        let detectedUDID = "00008030-001A45E40E30002E" // UDID simulado
-        DispatchQueue.main.async {
-            self.deviceInfo = "iPhone"
-            self.iosVersion = UIDevice.current.systemVersion
-            self.isDeveloperModeEnabled = true
-            self.log("Dispositivo detectado: \(self.deviceInfo) (iOS \(self.iosVersion))", type: .success)
+        log("Buscando dispositivo...", type: .info)
+        do {
+            let properties = try await deviceCommunicator.detectDevice()
+            let udid = properties["UDID"] as? String ?? "UDID_DESCONOCIDO"
+            let deviceName = properties["DeviceName"] as? String ?? "Dispositivo"
+            let version = properties["ProductVersion"] as? String ?? "iOS"
+
+            DispatchQueue.main.async {
+                self.deviceInfo = deviceName
+                self.iosVersion = version
+                self.isDeveloperModeEnabled = true // Asumimos que si se detecta, el modo desarrollador está activo.
+                self.log("Dispositivo detectado: \(deviceName) (iOS \(version))", type: .success)
+            }
+            return udid
+        } catch {
+            log("Error al detectar el dispositivo: \(error.localizedDescription)", type: .error)
+            DispatchQueue.main.async {
+                self.deviceInfo = "No detectado"
+                self.iosVersion = "Desconocida"
+            }
+            return ""
         }
-        return detectedUDID
     }
 
     /// Consulta si la imagen DDI ya está montada en el sistema
-    func checkDDIMounted() async -> Bool {
+    func checkDDIMounted(udid: String) async -> Bool {
+        guard !udid.isEmpty else { return false }
         log("Verificando estado del DDI...", type: .info)
-        try? await Task.sleep(nanoseconds: 800_000_000)
-        
-        // Lógica real de query de MobileActivation / MobileImageMounter irá integrada aquí
-        let isMounted = false 
-        
-        DispatchQueue.main.async {
-            self.ddiStatus = isMounted ? .mounted : .notMounted
-            self.log(isMounted ? "DDI ya se encuentra montado." : "DDI no está montado.", type: isMounted ? .success : .warning)
+        do {
+            let isMounted = try await deviceCommunicator.isDDIMounted(udid: udid)
+            DispatchQueue.main.async {
+                self.ddiStatus = isMounted ? .mounted : .notMounted
+                self.log(isMounted ? "DDI ya se encuentra montado." : "DDI no está montado.", type: isMounted ? .success : .warning)
+            }
+            return isMounted
+        } catch {
+            log("Error al verificar DDI: \(error.localizedDescription)", type: .error)
+            DispatchQueue.main.async { self.ddiStatus = .unknown }
+            return false
         }
-        return isMounted
     }
 
     /// Intenta el montaje de la imagen personalizada (DDI)
-    func mountDDI() async {
+    func mountDDI(udid: String) async {
+        guard !udid.isEmpty else { return }
         log("Iniciando proceso de montaje de DDI...", type: .info)
-        // Integración futura con StikDebug / MobileImageMounter protocol
-        try? await Task.sleep(nanoseconds: 1_500_000_000)
-        
-        DispatchQueue.main.async {
-            self.ddiStatus = .mounted
-            self.log("DDI montado exitosamente.", type: .success)
+        do {
+            // NOTA: Necesitarás una forma de obtener la ruta al archivo DDI.
+            try await deviceCommunicator.mountDDI(udid: udid, ddiPath: "/ruta/a/tu/ddi.dmg")
+            DispatchQueue.main.async {
+                self.ddiStatus = .mounted
+                self.log("DDI montado exitosamente.", type: .success)
+            }
+        } catch {
+            log("Error al montar DDI: \(error.localizedDescription)", type: .error)
+            DispatchQueue.main.async { self.ddiStatus = .notMounted }
         }
     }
 }

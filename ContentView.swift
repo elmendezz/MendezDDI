@@ -1,6 +1,7 @@
 // ContentView.swift
-// MendezDDI - Version: 1.0.0
+// MendezDDI - Version: 1.2.0
 // Changelog:
+// v1.2.0 - Integración con DeviceCommunicator y paso de UDID.
 // v1.0.0 - Interfaz de usuario en SwiftUI respetando la consola y componentes estáticos.
 
 import SwiftUI
@@ -10,6 +11,7 @@ struct ContentView: View {
     @StateObject private var ddiManager = DDIManager()
     @State private var isPairingValid: Bool = false
     @State private var showFileImporter: Bool = false
+    @State private var detectedUDID: String = ""
 
     var body: some View {
         VStack(spacing: 16) {
@@ -90,7 +92,7 @@ struct ContentView: View {
 
                 Button(action: {
                     Task {
-                        await ddiManager.mountDDI()
+                        await ddiManager.mountDDI(udid: detectedUDID)
                     }
                 }) {
                     Label("Montar DDI", systemImage: "play.fill")
@@ -105,9 +107,9 @@ struct ContentView: View {
 
             Button(action: {
                 Task {
-                    let udid = await ddiManager.detectDevice()
-                    await loadExistingPairing(for: udid)
-                    _ = await ddiManager.checkDDIMounted() // Verificamos el DDI después de validar el pairing
+                    self.detectedUDID = await ddiManager.detectDevice()
+                    await loadExistingPairing(for: self.detectedUDID)
+                    _ = await ddiManager.checkDDIMounted(udid: self.detectedUDID)
                 }
             }) {
                 Label("Verificar Dispositivo", systemImage: "arrow.clockwise")
@@ -171,6 +173,14 @@ struct ContentView: View {
                 ddiManager.log("Error al seleccionar archivo: \(error.localizedDescription)", type: .error)
             }
         }
+        .onAppear {
+            // Al iniciar la app, verificamos automáticamente el dispositivo y su pairing.
+            Task {
+                self.detectedUDID = await ddiManager.detectDevice()
+                await loadExistingPairing(for: self.detectedUDID)
+                _ = await ddiManager.checkDDIMounted(udid: self.detectedUDID)
+            }
+        }
     }
 
     private func colorForLog(type: LogType) -> Color {
@@ -183,6 +193,12 @@ struct ContentView: View {
     }
 
     private func loadExistingPairing(for udid: String) async {
+        // Si ya tenemos un pairing válido, no hacemos nada para evitar que se borre la información.
+        if isPairingValid {
+            ddiManager.log("Ya existe un pairing válido. Omitiendo búsqueda.", type: .info)
+            return
+        }
+
         ddiManager.log("Buscando pairing existente para UDID: \(udid)...", type: .info)
         do {
             // Intentamos cargar el pairing y procesarlo para validar su contenido
