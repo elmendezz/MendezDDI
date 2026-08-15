@@ -1,9 +1,11 @@
 // DDIManager.swift
-// MendezDDI - Version: 1.0.0
+// MendezDDI - Version: 1.0.1
 // Changelog:
+// v1.0.1 - Inclusión de import UIKit para resolver 'UIDevice' in scope.
 // v1.0.0 - Gestor principal para conexiones Lockdown, detección de Developer Mode y verificación de DDI.
 
 import Foundation
+import UIKit
 
 enum DDIStatus {
     case notMounted
