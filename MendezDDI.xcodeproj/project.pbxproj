@@ -1,0 +1,239 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		A10000012C60000000000001 /* MendezDDIApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000012C60000000000000 /* MendezDDIApp.swift */; };
+		A10000022C60000000000001 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000022C60000000000000 /* ContentView.swift */; };
+		A10000032C60000000000001 /* PairingFile.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000032C60000000000000 /* PairingFile.swift */; };
+		A10000042C60000000000001 /* LockdownClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000042C60000000000000 /* LockdownClient.swift */; };
+		A10000052C60000000000001 /* DeviceInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000052C60000000000000 /* DeviceInfo.swift */; };
+		A10000062C60000000000001 /* DeviceConnection.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000062C60000000000000 /* DeviceConnection.swift */; };
+		A10000072C60000000000001 /* DDIManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000072C60000000000000 /* DDIManager.swift */; };
+		A10000082C60000000000001 /* DDIImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000082C60000000000000 /* DDIImage.swift */; };
+		A10000092C60000000000001 /* DDIDownloader.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000092C60000000000000 /* DDIDownloader.swift */; };
+		A100000A2C60000000000001 /* DDIPersonalizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A100000A2C60000000000000 /* DDIPersonalizer.swift */; };
+		A100000B2C60000000000001 /* DDIMounter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A100000B2C60000000000000 /* DDIMounter.swift */; };
+		A100000C2C60000000000001 /* DDIVerifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = A100000C2C60000000000000 /* DDIVerifier.swift */; };
+		A100000D2C60000000000001 /* LocalVPNManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A100000D2C60000000000000 /* LocalVPNManager.swift */; };
+		A100000E2C60000000000001 /* VPNStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = A100000E2C60000000000000 /* VPNStatus.swift */; };
+		A100000F2C60000000000001 /* PairingImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A100000F2C60000000000000 /* PairingImporter.swift */; };
+		A10000102C60000000000001 /* PairingValidator.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000102C60000000000000 /* PairingValidator.swift */; };
+		A10000112C60000000000001 /* PairingStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000112C60000000000000 /* PairingStore.swift */; };
+		A10000122C60000000000001 /* DeveloperService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000122C60000000000000 /* DeveloperService.swift */; };
+		A10000132C60000000000001 /* InstallationProxy.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000132C60000000000000 /* InstallationProxy.swift */; };
+		A10000142C60000000000001 /* Diagnostics.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000142C60000000000000 /* Diagnostics.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		A10000002C60000000000000 /* MendezDDI.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MendezDDI.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A10000012C60000000000000 /* MendezDDIApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/MendezDDIApp.swift; sourceTree = "<group>"; };
+		A10000022C60000000000000 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/ContentView.swift; sourceTree = "<group>"; };
+		A10000032C60000000000000 /* PairingFile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Device/PairingFile.swift; sourceTree = "<group>"; };
+		A10000042C60000000000000 /* LockdownClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Device/LockdownClient.swift; sourceTree = "<group>"; };
+		A10000052C60000000000000 /* DeviceInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Device/DeviceInfo.swift; sourceTree = "<group>"; };
+		A10000062C60000000000000 /* DeviceConnection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Device/DeviceConnection.swift; sourceTree = "<group>"; };
+		A10000072C60000000000000 /* DDIManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDI/DDIManager.swift; sourceTree = "<group>"; };
+		A10000082C60000000000000 /* DDIImage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDI/DDIImage.swift; sourceTree = "<group>"; };
+		A10000092C60000000000000 /* DDIDownloader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDI/DDIDownloader.swift; sourceTree = "<group>"; };
+		A100000A2C60000000000000 /* DDIPersonalizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDI/DDIPersonalizer.swift; sourceTree = "<group>"; };
+		A100000B2C60000000000000 /* DDIMounter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDI/DDIMounter.swift; sourceTree = "<group>"; };
+		A100000C2C60000000000000 /* DDIVerifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDI/DDIVerifier.swift; sourceTree = "<group>"; };
+		A100000D2C60000000000000 /* LocalVPNManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VPN/LocalVPNManager.swift; sourceTree = "<group>"; };
+		A100000E2C60000000000000 /* VPNStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VPN/VPNStatus.swift; sourceTree = "<group>"; };
+		A100000F2C60000000000000 /* PairingImporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Pairing/PairingImporter.swift; sourceTree = "<group>"; };
+		A10000102C60000000000000 /* PairingValidator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Pairing/PairingValidator.swift; sourceTree = "<group>"; };
+		A10000112C60000000000000 /* PairingStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Pairing/PairingStore.swift; sourceTree = "<group>"; };
+		A10000122C60000000000000 /* DeveloperService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/DeveloperService.swift; sourceTree = "<group>"; };
+		A10000132C60000000000000 /* InstallationProxy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/InstallationProxy.swift; sourceTree = "<group>"; };
+		A10000142C60000000000000 /* Diagnostics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/Diagnostics.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		B10000002C60000000000000 = {
+			isa = PBXGroup;
+			children = (
+				B10000012C60000000000000 /* MendezDDI */,
+				A10000002C60000000000000 /* MendezDDI.app */,
+			);
+			sourceTree = "<group>";
+		};
+		B10000012C60000000000000 /* MendezDDI */ = {
+			isa = PBXGroup;
+			children = (
+				A10000012C60000000000000 /* MendezDDIApp.swift */,
+				A10000022C60000000000000 /* ContentView.swift */,
+				A10000032C60000000000000 /* PairingFile.swift */,
+				A10000042C60000000000000 /* LockdownClient.swift */,
+				A10000052C60000000000000 /* DeviceInfo.swift */,
+				A10000062C60000000000000 /* DeviceConnection.swift */,
+				A10000072C60000000000000 /* DDIManager.swift */,
+				A10000082C60000000000000 /* DDIImage.swift */,
+				A10000092C60000000000000 /* DDIDownloader.swift */,
+				A100000A2C60000000000000 /* DDIPersonalizer.swift */,
+				A100000B2C60000000000000 /* DDIMounter.swift */,
+				A100000C2C60000000000000 /* DDIVerifier.swift */,
+				A100000D2C60000000000000 /* LocalVPNManager.swift */,
+				A100000E2C60000000000000 /* VPNStatus.swift */,
+				A100000F2C60000000000000 /* PairingImporter.swift */,
+				A10000102C60000000000000 /* PairingValidator.swift */,
+				A10000112C60000000000000 /* PairingStore.swift */,
+				A10000122C60000000000000 /* DeveloperService.swift */,
+				A10000132C60000000000000 /* InstallationProxy.swift */,
+				A10000142C60000000000000 /* Diagnostics.swift */,
+			);
+			path = MendezDDI;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		C10000002C60000000000000 /* MendezDDI */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = C10000012C60000000000000 /* Build configuration list for PBXNativeTarget "MendezDDI" */;
+			buildPhases = (
+				C10000022C60000000000000 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = MendezDDI;
+			productName = MendezDDI;
+			productReference = A10000002C60000000000000 /* MendezDDI.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		D10000002C60000000000000 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastSwiftUpdateCheck = 1500;
+				LastUpgradeCheck = 1500;
+			};
+			buildConfigurationList = D10000012C60000000000000 /* Build configuration list for PBXProject "MendezDDI" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = B10000002C60000000000000;
+			productRefGroup = B10000002C60000000000000;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				C10000002C60000000000000 /* MendezDDI */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		C10000022C60000000000000 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A10000012C60000000000001 /* MendezDDIApp.swift in Sources */,
+				A10000022C60000000000001 /* ContentView.swift in Sources */,
+				A10000032C60000000000001 /* PairingFile.swift in Sources */,
+				A10000042C60000000000001 /* LockdownClient.swift in Sources */,
+				A10000052C60000000000001 /* DeviceInfo.swift in Sources */,
+				A10000062C60000000000001 /* DeviceConnection.swift in Sources */,
+				A10000072C60000000000001 /* DDIManager.swift in Sources */,
+				A10000082C60000000000001 /* DDIImage.swift in Sources */,
+				A10000092C60000000000001 /* DDIDownloader.swift in Sources */,
+				A100000A2C60000000000001 /* DDIPersonalizer.swift in Sources */,
+				A100000B2C60000000000001 /* DDIMounter.swift in Sources */,
+				A100000C2C60000000000001 /* DDIVerifier.swift in Sources */,
+				A100000D2C60000000000001 /* LocalVPNManager.swift in Sources */,
+				A100000E2C60000000000001 /* VPNStatus.swift in Sources */,
+				A100000F2C60000000000001 /* PairingImporter.swift in Sources */,
+				A10000102C60000000000001 /* PairingValidator.swift in Sources */,
+				A10000112C60000000000001 /* PairingStore.swift in Sources */,
+				A10000122C60000000000001 /* DeveloperService.swift in Sources */,
+				A10000132C60000000000001 /* InstallationProxy.swift in Sources */,
+				A10000142C60000000000001 /* Diagnostics.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		E10000012C60000000000000 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGNING_ALLOWED = NO;
+				CODE_SIGN_IDENTITY = "";
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = MendezDDI;
+				INFOPLIST_KEY_LSRequiresIPhoneOS = YES;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.mendez.ddi.MendezDDI;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		E10000022C60000000000000 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGNING_ALLOWED = NO;
+				CODE_SIGN_IDENTITY = "";
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = MendezDDI;
+				INFOPLIST_KEY_LSRequiresIPhoneOS = YES;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.mendez.ddi.MendezDDI;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		C10000012C60000000000000 /* Build configuration list for PBXNativeTarget "MendezDDI" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E10000012C60000000000000 /* Debug */,
+				E10000022C60000000000000 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D10000012C60000000000000 /* Build configuration list for PBXProject "MendezDDI" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E10000012C60000000000000 /* Debug */,
+				E10000022C60000000000000 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = D10000002C60000000000000 /* Project object */;
+}
