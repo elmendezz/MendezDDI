@@ -1,6 +1,7 @@
 # .github/workflows/build.yml
-# MendezDDI - Version: 1.1.0
+# MendezDDI - Version: 1.1.1
 # Changelog:
+# v1.1.1 - Corrección de sintaxis YAML en la línea 80 (bloques multilínea e Info.plist).
 # v1.1.0 - Workflow completo para compilación, caché de DerivedData/SPM, empaquetado en IPA y publicación de Release con fecha/hora/segundo.
 # v1.0.0 - Archivos base de la aplicación Swift/SwiftUI.
 
@@ -42,7 +43,6 @@ jobs:
         run: |
           cd MendezDDI
           
-          # Si usas proyecto Xcode tradicional (.xcodeproj):
           if [ -d "MendezDDI.xcodeproj" ]; then
             xcodebuild clean build \
               -project MendezDDI.xcodeproj \
@@ -54,8 +54,7 @@ jobs:
               CODE_SIGNING_ALLOWED=NO \
               CONFIGURATION_BUILD_DIR=build/Release-iphoneos
           else
-            # Si se compila directamente mediante archivos Swift / SPM:
-            mkdir -p build/Release-iphoneos/Payload
+            mkdir -p build/Release-iphoneos
             echo "Compilando directamente archivos Swift..."
             swiftc -sdk $(xcrun --sdk iphoneos --show-sdk-path) \
                    -target arm64-apple-ios15.0 \
@@ -68,39 +67,35 @@ jobs:
         run: |
           mkdir -p Payload
           
-          # Verificar si se generó un .app o un binario suelto
           if [ -d "MendezDDI/build/Release-iphoneos/MendezDDI.app" ]; then
             cp -r MendezDDI/build/Release-iphoneos/MendezDDI.app Payload/
           else
             mkdir -p Payload/MendezDDI.app
             cp MendezDDI/build/Release-iphoneos/MendezDDI Payload/MendezDDI.app/
             
-            # Crear Info.plist básico si fue compilación directa
-            cat << 'PLIST' > Payload/MendezDDI.app/Info.plist
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-    <key>CFBundleExecutable</key>
-    <string>MendezDDI</string>
-    <key>CFBundleIdentifier</key>
-    <string>com.mendez.ddi</string>
-    <key>CFBundleName</key>
-    <string>MendezDDI</string>
-    <key>CFBundleShortVersionString</key>
-    <string>1.0</string>
-    <key>CFBundleVersion</key>
-    <string>1</string>
-    <key>LSRequiresIPhoneOS</key>
-    <true/>
-    <key>UIDeviceFamily</key>
-    <array>
-        <integer>1</integer>
-        <integer>2</integer>
-    </array>
-</dict>
-</plist>
-PLIST
+            echo '<?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+              <key>CFBundleExecutable</key>
+              <string>MendezDDI</string>
+              <key>CFBundleIdentifier</key>
+              <string>com.mendez.ddi</string>
+              <key>CFBundleName</key>
+              <string>MendezDDI</string>
+              <key>CFBundleShortVersionString</key>
+              <string>1.0</string>
+              <key>CFBundleVersion</key>
+              <string>1</string>
+              <key>LSRequiresIPhoneOS</key>
+              <true/>
+              <key>UIDeviceFamily</key>
+              <array>
+                  <integer>1</integer>
+                  <integer>2</integer>
+              </array>
+          </dict>
+          </plist>' > Payload/MendezDDI.app/Info.plist
           fi
 
           zip -r MendezDDI.ipa Payload
