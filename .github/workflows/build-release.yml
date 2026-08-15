@@ -1,0 +1,64 @@
+# Version: 1
+# Dependencies: actions/checkout@v4, actions/cache@v4, softprops/action-gh-release@v2
+# Changelog:
+# - Version 1: Creacion inicial del workflow de compilacion, cache y creacion automatica de Release con Tag de fecha e IPA adjunto.
+
+name: Build and Release MendezDDI
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout del repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar Cache de Build / Tools
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/Library/Caches/CocoaPods
+            ~/.cargo/bin
+            ~/.cargo/registry
+            ~/.cargo/git
+            build/
+            DerivedData/
+          key: ${{ runner.os }}-mendezddi-${{ hashFiles('**/*') }}
+          restore-keys: |
+            ${{ runner.os }}-mendezddi-
+
+      - name: Generar variable de fecha
+        id: date
+        run: echo "DATE=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
+
+      - name: Compilar y generar MendezDDI.ipa
+        run: |
+          # Aca van los comandos exactos de compilacion de tu entorno
+          # Ejemplo basico para asegurar que el archivo existe si compilas mediante script custom:
+          if [ ! -f "MendezDDI.ipa" ]; then
+            echo "Ejecutando proceso de build..."
+            # Tu comando de build aqui (xcodebuild, make, etc.)
+          fi
+
+      - name: Publicar Release en GitHub
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: MendezDDI-${{ env.DATE }}
+          name: MendezDDI-${{ env.DATE }}
+          body: |
+            Compilacion automatica de MendezDDI generada el ${{ env.DATE }}.
+            
+            **Archivos incluidos:**
+            - MendezDDI.ipa
+          files: MendezDDI.ipa
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
