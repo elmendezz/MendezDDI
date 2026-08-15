@@ -30,6 +30,11 @@ jobs:
           sudo xcode-select -s /Applications/Xcode_15.4.app/Contents/Developer
           xcodebuild -version
 
+      - name: Instalar libimobiledevice
+        run: |
+          /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+          brew install libimobiledevice
+
       - name: Caché de DerivedData y Swift Package Manager
         uses: actions/cache@v4
         with:
@@ -40,64 +45,30 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-xcode-
 
-      - name: Compilar aplicación (MendezDDI)
+      - name: Compilar aplicación de macOS (MendezDDI)
         run: |
-          if [ -d "MendezDDI.xcodeproj" ]; then
-            xcodebuild clean build \
-              -project MendezDDI.xcodeproj \
-              -scheme MendezDDI \
-              -sdk iphoneos \
-              -configuration Release \
-              CODE_SIGN_IDENTITY="" \
-              CODE_SIGNING_REQUIRED=NO \
-              CODE_SIGNING_ALLOWED=NO \
-              CONFIGURATION_BUILD_DIR=build/Release-iphoneos
-          else
-            mkdir -p build/Release-iphoneos
-            echo "Compilando directamente archivos Swift en la raíz..."
-            swiftc -sdk $(xcrun --sdk iphoneos --show-sdk-path) \
-                   -target arm64-apple-ios15.0 \
-                   -emit-executable \
-                   -o build/Release-iphoneos/MendezDDI \
-                   *.swift
-          fi
+          mkdir -p build/Release-macos
+          echo "Compilando aplicación de macOS..."
+          swiftc -v -o build/Release-macos/MendezDDI \
+                 -swift-version 5 \
+                 -target arm64-apple-macos12.0 \
+                 -I . \
+                 -I/opt/homebrew/include \
+                 -L/opt/homebrew/lib \
+                 -framework SwiftUI \
+                 -framework Foundation \
+                 -framework UniformTypeIdentifiers \
+                 -framework Security \
+                 *.swift
 
-      - name: Empaquetar en MendezDDI.ipa
+      - name: Empaquetar en MendezDDI.app y crear .zip
         run: |
-          mkdir -p Payload
-          
-          if [ -d "build/Release-iphoneos/MendezDDI.app" ]; then
-            cp -r build/Release-iphoneos/MendezDDI.app Payload/
-          else
-            mkdir -p Payload/MendezDDI.app
-            cp build/Release-iphoneos/MendezDDI Payload/MendezDDI.app/
-            
-            echo '<?xml version="1.0" encoding="UTF-8"?>
-          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-          <plist version="1.0">
-          <dict>
-              <key>CFBundleExecutable</key>
-              <string>MendezDDI</string>
-              <key>CFBundleIdentifier</key>
-              <string>com.mendez.ddi</string>
-              <key>CFBundleName</key>
-              <string>MendezDDI</string>
-              <key>CFBundleShortVersionString</key>
-              <string>1.0</string>
-              <key>CFBundleVersion</key>
-              <string>1</string>
-              <key>LSRequiresIPhoneOS</key>
-              <true/>
-              <key>UIDeviceFamily</key>
-              <array>
-                  <integer>1</integer>
-                  <integer>2</integer>
-              </array>
-          </dict>
-          </plist>' > Payload/MendezDDI.app/Info.plist
-          fi
-
-          zip -r MendezDDI.ipa Payload
+          mkdir -p MendezDDI.app/Contents/MacOS
+          cp build/Release-macos/MendezDDI MendezDDI.app/Contents/MacOS/
+          # Crear un Info.plist básico para la app de macOS
+          echo '<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd"><plist version="1.0"><dict><key>CFBundleExecutable</key><string>MendezDDI</string><key>CFBundleIdentifier</key><string>com.mendez.ddi</string><key>CFBundleName</key><string>MendezDDI</string><key>CFBundlePackageType</key><string>APPL</string><key>CFBundleShortVersionString</key><string>1.0</string><key>CFBundleVersion</key><string>1</string></dict></plist>' > MendezDDI.app/Contents/Info.plist
+          # Comprimir la aplicación en un archivo .zip
+          zip -r MendezDDI.zip MendezDDI.app
           echo "TIMESTAMP=$(date +'%Y%m%d-%H%M%S')" >> $GITHUB_ENV
 
       - name: Crear Release en GitHub
@@ -107,8 +78,8 @@ jobs:
           name: Release MendezDDI-${{ env.TIMESTAMP }}
           body: |
             Compilación automática de **MendezDDI**.
-            - **Fecha/Hora:** ${{ env.TIMESTAMP }}
-            - **Archivo:** `MendezDDI.ipa`
-          files: MendezDDI.ipa
+            - **Fecha/Hora (UTC):** ${{ env.TIMESTAMP }}
+            - **Archivo:** `MendezDDI.zip`
+          files: MendezDDI.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
