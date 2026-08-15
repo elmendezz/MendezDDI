@@ -6,6 +6,29 @@
 import Foundation
 import Security
 
+enum PairingError: Error, LocalizedError {
+    case invalidPlistFormat
+    case udidNotFound
+    case keychainSaveFailed(status: OSStatus)
+    case keychainLoadFailed(status: OSStatus)
+    case itemNotFound
+
+    var errorDescription: String? {
+        switch self {
+        case .invalidPlistFormat:
+            return "Formato de Plist inválido o no es un diccionario."
+        case .udidNotFound:
+            return "No se pudo encontrar la clave 'UDID' o 'DeviceUDID' en el archivo de pairing."
+        case .keychainSaveFailed(let status):
+            return "Error al guardar en Keychain. Código: \(status)"
+        case .keychainLoadFailed(let status):
+            return "Error al cargar desde Keychain. Código: \(status)"
+        case .itemNotFound:
+            return "No se encontró el registro de pairing en el Keychain."
+        }
+    }
+}
+
 struct PairingRecord {
     let udid: String
     let rawData: Data
@@ -21,11 +44,13 @@ final class PairingManager {
     /// Procesa el contenido de un archivo .plist o .pairingfile
     func processPairingData(_ data: Data) throws -> PairingRecord {
         guard let plist = try PropertyListSerialization.propertyList(from: data, options: [], format: nil) as? [String: Any] else {
-            throw NSError(domain: "PairingError", code: 1, userInfo: [NSLocalizedDescriptionKey: "Formato de Plist inválido"])
+            throw PairingError.invalidPlistFormat
         }
         
         // Extracción del UDID o Identificador del dispositivo
-        let udid = plist["UDID"] as? String ?? plist["DeviceUDID"] as? String ?? "Unknown_UDID"
+        guard let udid = plist["UDID"] as? String ?? plist["DeviceUDID"] as? String else {
+            throw PairingError.udidNotFound
+        }
         
         let record = PairingRecord(udid: udid, rawData: data, isValid: true)
         try saveToKeychain(record: record)
@@ -45,12 +70,12 @@ final class PairingManager {
         let status = SecItemAdd(query as CFDictionary, nil)
         
         guard status == errSecSuccess else {
-            throw NSError(domain: "KeychainError", code: Int(status), userInfo: [NSLocalizedDescriptionKey: "Error al guardar credenciales en Keychain"])
+            throw PairingError.keychainSaveFailed(status: status)
         }
     }
 
     /// Recupera el registro guardado previamente
-    func loadPairingRecord(for udid: String) -> Data? {
+    func loadPairingRecord(for udid: String) throws -> Data {
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrAccount as String: udid,
@@ -62,9 +87,12 @@ final class PairingManager {
         var dataTypeRef: AnyObject?
         let status = SecItemCopyMatching(query as CFDictionary, &dataTypeRef)
         
-        if status == errSecSuccess {
-            return dataTypeRef as? Data
+        guard status != errSecItemNotFound else {
+            throw PairingError.itemNotFound
         }
-        return nil
+        guard status == errSecSuccess, let data = dataTypeRef as? Data else {
+            throw PairingError.keychainLoadFailed(status: status)
+        }
+        return data
     }
 }

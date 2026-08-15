@@ -43,7 +43,7 @@ struct ContentView: View {
                 }
             }
             .padding()
-            .background(Color(UIColor.secondarySystemBackground))
+            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
             .cornerRadius(12)
             .padding(.horizontal)
 
@@ -75,7 +75,7 @@ struct ContentView: View {
                 .font(.subheadline)
             }
             .padding()
-            .background(Color(UIColor.secondarySystemBackground))
+            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
             .cornerRadius(12)
             .padding(.horizontal)
 
@@ -105,8 +105,9 @@ struct ContentView: View {
 
             Button(action: {
                 Task {
-                    await ddiManager.detectDevice()
-                    _ = await ddiManager.checkDDIMounted()
+                    let udid = await ddiManager.detectDevice()
+                    await loadExistingPairing(for: udid)
+                    _ = await ddiManager.checkDDIMounted() // Verificamos el DDI después de validar el pairing
                 }
             }) {
                 Label("Verificar Dispositivo", systemImage: "arrow.clockwise")
@@ -124,10 +125,10 @@ struct ContentView: View {
                 
                 ScrollView {
                     VStack(alignment: .leading, spacing: 2) {
-                        ForEach(ddiManager.logs, id: \.self) { logMessage in
-                            Text(logMessage)
+                        ForEach(ddiManager.logs) { logEntry in
+                            Text("[\(logEntry.timestamp)] \(logEntry.message)")
                                 .font(.system(.caption, design: .monospaced))
-                                .foregroundColor(.green)
+                                .foregroundColor(colorForLog(type: logEntry.type))
                                 .frame(maxWidth: .infinity, alignment: .leading)
                         }
                     }
@@ -154,16 +155,48 @@ struct ContentView: View {
                     if let data = try? Data(contentsOf: selectedFile) {
                         do {
                             let record = try PairingManager.shared.processPairingData(data)
-                            self.isPairingValid = record.isValid
-                            ddiManager.log("Pairing cargado con éxito para UDID: \(record.udid)")
+                            if record.isValid {
+                                self.isPairingValid = true
+                                ddiManager.log("Pairing cargado con éxito para UDID: \(record.udid)", type: .success)
+                            } else {
+                                self.isPairingValid = false
+                                ddiManager.log("El registro de pairing no es válido.", type: .error)
+                            }
                         } catch {
-                            ddiManager.log("Error al procesar el pairing: \(error.localizedDescription)")
+                            ddiManager.log("Error al procesar el pairing: \(error.localizedDescription)", type: .error)
                         }
                     }
                 }
             case .failure(let error):
-                ddiManager.log("Error al seleccionar archivo: \(error.localizedDescription)")
+                ddiManager.log("Error al seleccionar archivo: \(error.localizedDescription)", type: .error)
             }
+        }
+    }
+
+    private func colorForLog(type: LogType) -> Color {
+        switch type {
+        case .info: return .white
+        case .success: return .green
+        case .warning: return .yellow
+        case .error: return .red
+        }
+    }
+
+    private func loadExistingPairing(for udid: String) async {
+        ddiManager.log("Buscando pairing existente para UDID: \(udid)...", type: .info)
+        do {
+            // Intentamos cargar el pairing y procesarlo para validar su contenido
+            let pairingData = try PairingManager.shared.loadPairingRecord(for: udid)
+            let record = try PairingManager.shared.processPairingData(pairingData)
+            self.isPairingValid = record.isValid
+            ddiManager.log("Pairing válido encontrado y cargado desde el Keychain.", type: .success)
+        } catch let error as PairingError where error.localizedDescription == PairingError.itemNotFound.localizedDescription {
+            // Este es un caso esperado, no un error crítico.
+            self.isPairingValid = false
+            ddiManager.log("No se encontró un pairing para este dispositivo.", type: .warning)
+        } catch {
+            self.isPairingValid = false
+            ddiManager.log("Error al cargar el pairing: \(error.localizedDescription)", type: .error)
         }
     }
 }
