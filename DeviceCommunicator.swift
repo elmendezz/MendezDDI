@@ -49,19 +49,19 @@ private func convertPlistToDictionary(_ plist: plist_t) -> [String: Any]? {
         let keyString = String(cString: currentKey)
         free(currentKey)
 
-        switch plist_get_node_type(currentValue).rawValue {
-        case PLIST_STRING.rawValue:
+        switch plist_get_node_type(currentValue) {
+        case .string:
             var val: UnsafeMutablePointer<CChar>?
             plist_get_string_val(currentValue, &val)
             if let cStr = val {
                 dict[keyString] = String(cString: cStr)
                 free(cStr)
             }
-        case PLIST_UINT.rawValue:
+        case .uint:
             var val: UInt64 = 0
             plist_get_uint_val(currentValue, &val)
             dict[keyString] = val
-        case PLIST_BOOLEAN.rawValue:
+        case .boolean:
             var val: UInt8 = 0
             plist_get_bool_val(currentValue, &val)
             dict[keyString] = (val != 0)
