@@ -49,19 +49,19 @@ private func convertPlistToDictionary(_ plist: plist_t) -> [String: Any]? {
         let keyString = String(cString: currentKey)
         free(currentKey)
 
-        switch plist_get_node_type(currentValue).rawValue {
-        case PLIST_STRING.rawValue:
+        switch plist_get_node_type(currentValue) {
+        case .STRING:
             var val: UnsafeMutablePointer<CChar>?
             plist_get_string_val(currentValue, &val)
             if let cStr = val {
                 dict[keyString] = String(cString: cStr)
                 free(cStr)
             }
-        case PLIST_UINT.rawValue:
+        case .UINT:
             var val: UInt64 = 0
             plist_get_uint_val(currentValue, &val)
             dict[keyString] = val
-        case PLIST_BOOLEAN.rawValue:
+        case .BOOLEAN:
             var val: UInt8 = 0
             plist_get_bool_val(currentValue, &val)
             dict[keyString] = (val != 0)
@@ -207,7 +207,7 @@ class RealDevice: Device {
         defer { mobile_image_mounter_free(mim) }
         
         // 5. Leer el archivo .dmg y obtener su tamaño.
-        guard let dmgData = try? Data(contentsOf: URL(fileURLWithPath: path)) else {
+        guard (try? Data(contentsOf: URL(fileURLWithPath: path))) != nil else {
             throw DeviceCommunicationError.mountFailed(details: "No se pudo leer el archivo .dmg en \(path)")
         }
 
