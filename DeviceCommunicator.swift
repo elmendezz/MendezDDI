@@ -49,19 +49,19 @@ private func convertPlistToDictionary(_ plist: plist_t) -> [String: Any]? {
         let keyString = String(cString: currentKey)
         free(currentKey)
 
-        switch plist_get_node_type(currentValue).rawValue {
-        case PLIST_STRING.rawValue:
+        switch plist_get_node_type(currentValue).rawValue { // Comparar el valor numérico del enum
+        case 3: // Corresponde a PLIST_STRING
             var val: UnsafeMutablePointer<CChar>?
             plist_get_string_val(currentValue, &val)
             if let cStr = val {
                 dict[keyString] = String(cString: cStr)
                 free(cStr)
             }
-        case PLIST_UINT.rawValue:
+        case 1: // Corresponde a PLIST_UINT
             var val: UInt64 = 0
             plist_get_uint_val(currentValue, &val)
             dict[keyString] = val
-        case PLIST_BOOLEAN.rawValue:
+        case 0: // Corresponde a PLIST_BOOLEAN
             var val: UInt8 = 0
             plist_get_bool_val(currentValue, &val)
             dict[keyString] = (val != 0)
