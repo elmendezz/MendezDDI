@@ -1,4 +1,5 @@
 module libimobiledevice {
     header "MendezDDI-Bridging-Header.h"
     link "imobiledevice-1.0"
+    link "plist-2.0"
 }
