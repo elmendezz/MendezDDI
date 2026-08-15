@@ -59,7 +59,7 @@ final class DDIManager: ObservableObject {
         do {
             let device = try await deviceCommunicator.detectDevice()
             let properties = try await device.getProperties()
-            let udid = properties["UDID"] as? String ?? "UDID_DESCONOCIDO"
+            let _ = properties["UDID"] as? String ?? "UDID_DESCONOCIDO"
             let deviceName = properties["DeviceName"] as? String ?? "Dispositivo"
             let version = properties["ProductVersion"] as? String ?? "iOS"
 

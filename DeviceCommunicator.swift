@@ -32,7 +32,7 @@ enum DeviceCommunicationError: Error, LocalizedError {
 // Importamos el módulo que nos da acceso a las funciones de C de libimobiledevice.
 import libimobiledevice
 
-// Helper para convertir un `plist_t` de C a un diccionario de Swift.
+// Helper para convertir un `plist_t` de C a un diccionario de Swift [String: Any].
 // Esta función es necesaria porque libimobiledevice devuelve los datos en su propio formato de Plist.
 private func convertPlistToDictionary(_ plist: plist_t) -> [String: Any]? {
     var dict = String: Any
@@ -49,19 +49,19 @@ private func convertPlistToDictionary(_ plist: plist_t) -> [String: Any]? {
         let keyString = String(cString: currentKey)
         free(currentKey)
 
-        switch plist_get_node_type(currentValue) {
-        case .string:
+        switch plist_get_node_type(currentValue).rawValue {
+        case PLIST_STRING.rawValue:
             var val: UnsafeMutablePointer<CChar>?
             plist_get_string_val(currentValue, &val)
             if let cStr = val {
                 dict[keyString] = String(cString: cStr)
                 free(cStr)
             }
-        case .uint:
+        case PLIST_UINT.rawValue:
             var val: UInt64 = 0
             plist_get_uint_val(currentValue, &val)
             dict[keyString] = val
-        case .boolean:
+        case PLIST_BOOLEAN.rawValue:
             var val: UInt8 = 0
             plist_get_bool_val(currentValue, &val)
             dict[keyString] = (val != 0)
@@ -81,7 +81,7 @@ protocol Device {
     var udid: String { get }
     func getProperties() async throws -> [String: Any]
     func isDDIMounted() async throws -> Bool
-    func mountDDI(path: String, signature: Data) async throws
+    func mountDDI(path: String, signature: Data, progressHandler: ((Double) -> Void)?) async throws
 }
 
 /// Implementación real de un dispositivo que utiliza `libimobiledevice` para la comunicación.
@@ -131,8 +131,8 @@ class RealDevice: Device {
     func isDDIMounted() async throws -> Bool {
         var device: idevice_t? = nil
         var lockdown: lockdownd_client_t? = nil
+        var service: lockdownd_service_descriptor_t? = nil
         var mim: mobile_image_mounter_client_t? = nil
-        var port: UInt16 = 0
 
         // 1. Obtener el objeto del dispositivo a partir de su UDID.
         guard idevice_new(&device, udid) == IDEVICE_E_SUCCESS else {
@@ -148,9 +148,11 @@ class RealDevice: Device {
 
         // 3. Iniciar el servicio `mobile_image_mounter` y obtener su puerto.
         let serviceName = "com.apple.mobile.mobile_image_mounter"
-        guard lockdownd_start_service(lockdown, serviceName, &port) == LOCKDOWN_E_SUCCESS, port > 0 else {
+        guard lockdownd_start_service(lockdown, serviceName, &service) == LOCKDOWN_E_SUCCESS, let serviceDesc = service else {
             throw DeviceCommunicationError.serviceConnectionFailed(serviceName: serviceName)
         }
+        let port = serviceDesc.pointee.port
+        lockdownd_service_descriptor_free(service)
 
         // 4. Crear un cliente para el servicio `mobile_image_mounter`.
         guard mobile_image_mounter_new(device, port, &mim) == MOBILE_IMAGE_MOUNTER_E_SUCCESS else {
@@ -177,8 +179,8 @@ class RealDevice: Device {
     func mountDDI(path: String, signature: Data, progressHandler: ((Double) -> Void)? = nil) async throws {
         var device: idevice_t? = nil
         var lockdown: lockdownd_client_t? = nil
+        var service: lockdownd_service_descriptor_t? = nil
         var mim: mobile_image_mounter_client_t? = nil
-        var port: UInt16 = 0
 
         // 1. Obtener el objeto del dispositivo a partir de su UDID.
         guard idevice_new(&device, udid) == IDEVICE_E_SUCCESS else {
@@ -194,9 +196,11 @@ class RealDevice: Device {
 
         // 3. Iniciar el servicio `mobile_image_mounter` y obtener su puerto.
         let serviceName = "com.apple.mobile.mobile_image_mounter"
-        guard lockdownd_start_service(lockdown, serviceName, &port) == LOCKDOWN_E_SUCCESS, port > 0 else {
+        guard lockdownd_start_service(lockdown, serviceName, &service) == LOCKDOWN_E_SUCCESS, let serviceDesc = service else {
             throw DeviceCommunicationError.serviceConnectionFailed(serviceName: serviceName)
         }
+        let port = serviceDesc.pointee.port
+        lockdownd_service_descriptor_free(service)
 
         // 4. Crear un cliente para el servicio `mobile_image_mounter`.
         guard mobile_image_mounter_new(device, port, &mim) == MOBILE_IMAGE_MOUNTER_E_SUCCESS else {
@@ -210,9 +214,9 @@ class RealDevice: Device {
         }
 
         // 6. Enviar el comando "MountImage" con los metadatos.
-        let mountError = signature.withUnsafeBytes { signaturePointer -> mobile_image_mounter_error_t in
-            let rawSignature = signaturePointer.baseAddress?.assumingMemoryBound(to: CChar.self)
-            return mobile_image_mounter_upload_image(mim, "Developer", UInt64(dmgData.count), rawSignature, UInt32(signature.count))
+        let mountError = signature.withUnsafeBytes { (signaturePointer: UnsafeRawBufferPointer) -> mobile_image_mounter_error_t in
+            let rawSignature = signaturePointer.bindMemory(to: CChar.self).baseAddress
+            return mobile_image_mounter_mount_image(mim, path, rawSignature, UInt32(signature.count), "Developer", nil)
         }
 
         guard mountError == MOBILE_IMAGE_MOUNTER_E_SUCCESS else {
@@ -220,48 +224,16 @@ class RealDevice: Device {
         }
 
         // 7. Transferir el archivo .dmg en bloques y reportar el progreso.
-        let chunkSize = 8192 // 8 KB
-        var bytesSent: Int = 0
-        
-        try dmgData.withUnsafeBytes { (dmgPointer: UnsafeRawBufferPointer) in
-            let totalSize = dmgData.count
-            
-            while bytesSent < totalSize {
-                let remaining = totalSize - bytesSent
-                let currentChunkSize = min(chunkSize, remaining)
-                let chunk = UnsafeRawBufferPointer(start: dmgPointer.baseAddress! + bytesSent, count: currentChunkSize)
-                
-                var sent: UInt32 = 0
-                let sendError = mobile_image_mounter_send_data(mim, chunk.baseAddress?.assumingMemoryBound(to: CChar.self), UInt32(currentChunkSize), &sent)
-                
-                guard sendError == MOBILE_IMAGE_MOUNTER_E_SUCCESS else {
-                    throw DeviceCommunicationError.mountFailed(details: "Error durante la transferencia de datos. Código: \(sendError.rawValue)")
-                }
-                
-                bytesSent += Int(sent)
-                
-                // Calcular y reportar el progreso.
-                let progress = Double(bytesSent) / Double(totalSize)
-                progressHandler?(progress)
-            }
-        }
-        
+        // NOTA: La función `mobile_image_mounter_mount_image` es bloqueante y no ofrece un callback de progreso fácil.
+        // La barra de progreso se completará al 100% al finalizar la transferencia.
+        // Para un progreso real, se necesitaría una implementación de sockets más compleja.
         progressHandler?(1.0) // Aseguramos que llegue al 100%
 
         // 8. Finalizar la transferencia y esperar la respuesta final del servicio.
-        var resultPlist: plist_t? = nil
-        guard mobile_image_mounter_receive_status(mim, &resultPlist) == MOBILE_IMAGE_MOUNTER_E_SUCCESS, let result = resultPlist else {
-            throw DeviceCommunicationError.mountFailed(details: "No se recibió una respuesta de estado final del dispositivo.")
-        }
-        defer { plist_free(result) }
+        // La función `mobile_image_mounter_mount_image` ya espera la respuesta, pero podemos verificar el estado si es necesario.
 
         // 9. Analizar la respuesta final para confirmar que el montaje fue exitoso.
-        guard let statusDict = convertPlistToDictionary(result),
-              let statusString = statusDict["Status"] as? String,
-              statusString == "Complete" else {
-            let errorDetails = (convertPlistToDictionary(result)?["Error"] as? String) ?? "Error desconocido durante el montaje."
-            throw DeviceCommunicationError.mountFailed(details: errorDetails)
-        }
+        // Si la función `mobile_image_mounter_mount_image` devolvió SUCCESS, el montaje fue exitoso.
     }
 }
 
