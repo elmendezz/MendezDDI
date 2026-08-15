@@ -1,6 +1,7 @@
 # .github/workflows/build.yml
-# MendezDDI - Version: 1.1.1
+# MendezDDI - Version: 1.1.2
 # Changelog:
+# v1.1.2 - Ajuste de rutas para ejecutar compilación desde la raíz del repositorio.
 # v1.1.1 - Corrección de sintaxis YAML en la línea 80 (bloques multilínea e Info.plist).
 # v1.1.0 - Workflow completo para compilación, caché de DerivedData/SPM, empaquetado en IPA y publicación de Release con fecha/hora/segundo.
 # v1.0.0 - Archivos base de la aplicación Swift/SwiftUI.
@@ -35,14 +36,12 @@ jobs:
           path: |
             ~/Library/Caches/org.swift.swiftpm
             ~/Library/Developer/Xcode/DerivedData
-          key: ${{ runner.os }}-xcode-${{ hashFiles('MendezDDI/**/*.swift', 'MendezDDI/**/*.xcodeproj', 'MendezDDI/**/Package.resolved') }}
+          key: ${{ runner.os }}-xcode-${{ hashFiles('**/*.swift', '**/*.xcodeproj', '**/Package.resolved') }}
           restore-keys: |
             ${{ runner.os }}-xcode-
 
       - name: Compilar aplicación (MendezDDI)
         run: |
-          cd MendezDDI
-          
           if [ -d "MendezDDI.xcodeproj" ]; then
             xcodebuild clean build \
               -project MendezDDI.xcodeproj \
@@ -55,7 +54,7 @@ jobs:
               CONFIGURATION_BUILD_DIR=build/Release-iphoneos
           else
             mkdir -p build/Release-iphoneos
-            echo "Compilando directamente archivos Swift..."
+            echo "Compilando directamente archivos Swift en la raíz..."
             swiftc -sdk $(xcrun --sdk iphoneos --show-sdk-path) \
                    -target arm64-apple-ios15.0 \
                    -emit-executable \
@@ -67,11 +66,11 @@ jobs:
         run: |
           mkdir -p Payload
           
-          if [ -d "MendezDDI/build/Release-iphoneos/MendezDDI.app" ]; then
-            cp -r MendezDDI/build/Release-iphoneos/MendezDDI.app Payload/
+          if [ -d "build/Release-iphoneos/MendezDDI.app" ]; then
+            cp -r build/Release-iphoneos/MendezDDI.app Payload/
           else
             mkdir -p Payload/MendezDDI.app
-            cp MendezDDI/build/Release-iphoneos/MendezDDI Payload/MendezDDI.app/
+            cp build/Release-iphoneos/MendezDDI Payload/MendezDDI.app/
             
             echo '<?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
